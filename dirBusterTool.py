@@ -13,6 +13,7 @@ def print_help():
     print("-w [<Path to wordlist>], --wordlist           Change wordlist used (Default: directory-list-2.3-small.txt)")
     print("-e [<Extensions list>], --extensions          Change file extensions (Default: \".txt,.php\")")
     print("-r [<Recursion level>], --recursion-level     Set recursion depth level (Default: 1) - Takes a while")
+    print("-o [<Path to output file>], --output          Save to output file (Default: None)")
 
 
 def validate_url(url: str) -> False:
@@ -26,7 +27,7 @@ def validate_url(url: str) -> False:
 def directory_exists(session, url: str) -> bool:
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
-        response = session.get(url, headers=headers, timeout=2)
+        response = session.get(url, headers=headers, timeout=1.5)
 
         if response.status_code == 200:
             return True
@@ -101,6 +102,8 @@ def main():
     recursion_level = 1
     verbose = False
     target_url = None
+    output_file = False
+    output_file_path = None
 
     # Check if arguments were given and exit if not
     if len(args) == 1:
@@ -174,10 +177,13 @@ def main():
                 sys.exit(1)
             continue
 
+        if arg[0] in ("-o", "--output"):
+            output_file_path = arg[1].strip()
+            continue
+
         # If none of the above, arg is invalid
         print(f"Error: Invalid argument {arg[0]}")
         sys.exit(1)
-
 
     if not target_url:
         print("Error: No target url specified")
@@ -228,10 +234,14 @@ def main():
             for dir_ in result_list:
                 print(target_url + '/' + dir_)
 
+        if output_file:
+            with open(output_file_path, "w") as file:
+                file.write(f"Busting {target_url} with {wordlist_path} wordlist...")
+                file.writelines(result_list)
+
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
         sys.exit(0)
-
